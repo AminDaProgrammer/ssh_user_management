@@ -73,6 +73,24 @@ def delete_user_by_id():
     print('done')
 
 
+def active_udp(port):
+    rc_text = f"""#!/bin/sh -e
+    screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:{port}
+    exit 0"""
+    os.system(
+        f'wget -O /usr/bin/badvpn-udpgw "https://raw.githubusercontent.com/daybreakersx/premscript/master/badvpn-udpgw64"')
+    os.system(f'touch /etc/rc.local')
+    os.system(f'echo {rc_text} > /etc/rc.local;')
+    os.system(
+        f'chmod +x /etc/rc.local && chmod +x /usr/bin/badvpn-udpgw && '
+        f'systemctl daemon-reload && '
+        f'sleep 0.5 && '
+        f'systemctl start rc-local.service && '
+        f'screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:{port}')
+    os.system('clear')
+    os.system(f'netstat -tulnp | 127.0.0.1:{port}')
+
+
 # submenu
 def delete_menu():
     text_message = """Choose the best option
@@ -101,7 +119,8 @@ Choose the best option
 1) Add user 
 2) Show all users
 3) Delete user
-4) Exit
+4) Active Udpgw
+5) Exit
 """
 while True:
     os.system('clear')
@@ -123,4 +142,8 @@ while True:
             delete_menu()
             break
         case "4":
+            os.system('clear')
+            active_udp(input('The port number for udp\nEnter: '))
+            break
+        case "5":
             break
