@@ -17,7 +17,7 @@ def generate_user(owner):
     adduser(user_id, username, password, expired_date.date())
     users_sheet_generator(
         {'ID': user_id, 'Username': username, 'Password': password, 'GenerationDate': generate_date.date(),
-         'ExpiredDate': expired_date.date(), 'Ownership': ownership})
+         'ExpiredDate': expired_date.date(), 'Ownership': owner})
 
 
 def adduser(user_id, username, password, expired_date):
@@ -65,30 +65,30 @@ def delete_user_by_id():
     os.system('clear')
     print(message)
     ids = input("Enter :").split(',')
-    usernames = pd.read_csv(f'./{filename}')
-    for row in usernames.values:
-        if str(row[0]) in ids:
+    users = pd.read_csv(f'./{filename}')
+    for row in users.values:
+        if str(row[0]) in ids:  # row[0] refer to the id number of user
             os.system(f'killall -u {row[1]}')
             os.system(f'userdel -r {row[1]}')
+            users.drop(users[users['ID'] == row[0]].index, inplace=True)
+            users.to_csv(filename, index=True)
     print('done')
 
 
 def active_udp(port):
-    rc_text = f"""#!/bin/sh -e
-    screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:{port}
-    exit 0"""
-    os.system(
-        f'wget -O /usr/bin/badvpn-udpgw "https://raw.githubusercontent.com/daybreakersx/premscript/master/badvpn-udpgw64"')
-    os.system(f'touch /etc/rc.local')
-    os.system(f'echo {rc_text} > /etc/rc.local;')
-    os.system(
-        f'chmod +x /etc/rc.local && chmod +x /usr/bin/badvpn-udpgw && '
-        f'systemctl daemon-reload && '
-        f'sleep 0.5 && '
-        f'systemctl start rc-local.service && '
-        f'screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:{port}')
-    os.system('clear')
-    os.system(f'netstat -tulnp | 127.0.0.1:{port}')
+    udp_text = f"""wget -O /usr/bin/badvpn-udpgw "https://raw.githubusercontent.com/daybreakersx/premscript/master/badvpn-udpgw64";
+    touch /etc/rc.local;echo "#!/bin/sh -e
+        screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:{port} exit 0" > /etc/rc.local;
+        chmod +x /etc/rc.local;
+        chmod +x /usr/bin/badvpn-udpgw;
+        systemctl daemon-reload;
+        sleep 0.5;
+        systemctl start rc-local.service;
+        screen -AmdS badvpn badvpn-udpgw --listen-addr 127.0.0.1:{port};
+        sleep 0.5
+        netstat -tulnp | grep 127.0.0.1:{port}
+        """
+    os.system(udp_text)
 
 
 # submenu
